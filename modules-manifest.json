@@ -1,0 +1,25 @@
+{
+  "system": "TB-Toolbox Feature Registry Manifest",
+  "version": "2.0.0",
+  "author": "Mr. Đào Xuân Tuấn (Tuấn Beo)",
+  "hotline": "0987.1987.92",
+  "email": "tuanbeo.technology@gmail.com",
+  "features": {
+    "F01_CLEANER": {
+      "id": "F01_CLEANER",
+      "name": "Dọn dẹp bộ nhớ tạm hệ thống",
+      "launcherBat": "[500]-Don-Dep-Bo-Nho-Tam-He-Thong.bat",
+      "engineFile": "Engine-Cleaner.ps1",
+      "downloadUrl": "Engine/Core/Engine-Cleaner.ps1",
+      "description": "Quét và giải phóng rác hệ thống (Temp, Prefetch, Crash dumps...)"
+    },
+    "F02_SHUTDOWN_TIMER": {
+      "id": "F02_SHUTDOWN_TIMER",
+      "name": "Hẹn giờ Tắt máy & Quản lý Nguồn điện",
+      "launcherBat": "[501]-Hen-Gio-Tat-May-Va-Quan-Ly-Nguon.bat",
+      "engineFile": "Engine-PowerManager.ps1",
+      "downloadUrl": "Engine/Core/Engine-PowerManager.ps1",
+      "description": "Hẹn giờ tắt máy, khởi động lại, ngủ đông và chống ngủ máy Awake"
+    }
+  }
+}
