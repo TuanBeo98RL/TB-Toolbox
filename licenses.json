@@ -4,7 +4,7 @@
                      "author":  "Mr. Đào Xuân Tuấn (Tuấn Beo)",
                      "hotline":  "0987.1987.92",
                      "email":  "tuanbeo.technology@gmail.com",
-                     "lastUpdated":  "2026-11-01 13:10:20"
+                     "lastUpdated":  "2026-11-01 17:57:10"
                  },
     "licenses":  {
                      "E96B99150DC49803B8FB5C91E1DBCF67":  {
@@ -14,7 +14,8 @@
                                                               "issuedAt":  "2026-11-01 13:10:20",
                                                               "expiresAt":  "LIFETIME",
                                                               "key":  "TBKEY-RSA.eyJrZXlJZCI6IlRCSy0yMDI2MTEwMS0xMzEwMjAtMjcyNSIsImh3aWQiOiJFOTZCOTkxNTBEQzQ5ODAzQjhGQjVDOTFFMURCQ0Y2NyIsImZ1bGxOYW1lIjoiTmd1eeG7hW4gVHXhuqVuIFRow6BuaCIsImVtYWlsIjoiMTIzNDU2Nzg5IiwiZ3JvdXBJZCI6IkdGMDIwMCIsImZlYXR1cmVzIjp7IkYwMl9TSFVURE9XTl9USU1FUiI6MSwiRjAxX0NMRUFORVIiOjF9LCJpc3N1ZWRBdCI6IjIwMjYtMTEtMDEgMTM6MTA6MjAiLCJleHBpcmVzQXQiOiJMSUZFVElNRSIsIm1vZGUiOiJJTlRFUkFDVElWRSIsImlzTG9ja2VkIjp0cnVlfQ==.ad1V1YSjvMpS059w1j4dQ7qKj7/DS2TzYnXFT9eIPebBlHcUqkewb2FHvpOVuh9d95tjaxP0mNLQ2zXmmA1OvgOFtgcK43uelXGYoQSUauVhXBjzF5tMDfsOyHV2FUnZWkrBh+p7AEb1BEykjM4R56idFkVJYQkzUPlzBs0EHZ72ZncZ6/qBuy72bYoB4DM2fRkZvt5f1rKj2jFWnbQnmJ4wT7u8gIqDJrjNk96qPhPmBLjhMmssKchdN3Y1sEE8h8KcUbzx0TzfmXj+1FYrOOQ7u+orOwngwP8NLlRHOSUPrP15rRiXzduxfaWdyJbQXiTH7j0GWM/DQ03e52A1dA==",
-                                                              "status":  1
+                                                              "status":  1,
+                                                              "groupName":  "Nhóm Basic"
                                                           }
                  }
 }
