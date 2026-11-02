@@ -6,9 +6,12 @@
 ================================================================================
 #>
 
-# Thiết lập bảng mã UTF-8 cho Console
+# Thiết lập bảng mã UTF-8 cho Console & Kích hoạt TLS 1.2 kết nối GitHub
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+try {
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12 -bor [System.Net.SecurityProtocolType]::Tls11 -bor [System.Net.SecurityProtocolType]::Tls
+} catch {}
 
 # Tự động gỡ cờ chặn (Unblock) nếu người dùng tải qua GitHub ZIP
 try {

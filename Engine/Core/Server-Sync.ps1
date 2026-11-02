@@ -74,6 +74,8 @@ function Start-ServerSyncInteractive {
     try {
         $wc = New-Object System.Net.WebClient
         $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
+        $wc.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
+        $wc.Headers.Add("Pragma", "no-cache")
         $rawJson = $wc.DownloadString($serverUrl)
         $registry = $rawJson | ConvertFrom-Json
         
@@ -85,7 +87,19 @@ function Start-ServerSyncInteractive {
             }
         }
     } catch {
-        Write-Host " [!] Tạm thời không thể tải danh sách bản quyền từ máy chủ: $($_.Exception.Message)" -ForegroundColor DarkGray
+        # Fallback qua GitHub API nếu CDN bị nghẽn
+        try {
+            $apiResp = Invoke-RestMethod -Uri "https://api.github.com/repos/TuanBeo98RL/TB-Toolbox/contents/licenses.json" -Headers @{"User-Agent"="TB-Toolbox-Client"; "Cache-Control"="no-cache"} -TimeoutSec 5
+            if ($apiResp -and $apiResp.content) {
+                $decoded = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($apiResp.content))
+                $registry = $decoded | ConvertFrom-Json
+                if ($registry.licenses -and $registry.licenses.PSObject.Properties[$currentHWID]) {
+                    $cloudEntry = $registry.licenses.$currentHWID
+                }
+            }
+        } catch {
+            Write-Host " [!] Tạm thời không thể tải danh sách bản quyền từ máy chủ: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
     }
 
     # 2. Xử lý trường hợp Bị thu hồi từ xa trên Server

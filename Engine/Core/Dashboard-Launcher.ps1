@@ -97,6 +97,8 @@ function Check-CloudUpdateQuick {
         $req = [System.Net.WebRequest]::Create($url)
         $req.Timeout = $TimeoutMs
         $req.Headers.Add("User-Agent", "TB-Toolbox-Client")
+        $req.Headers.Add("Cache-Control", "no-cache")
+        $req.Headers.Add("Pragma", "no-cache")
         
         $resp = $req.GetResponse()
         $stream = $resp.GetResponseStream()

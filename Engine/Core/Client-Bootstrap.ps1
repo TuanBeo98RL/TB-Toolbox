@@ -84,18 +84,13 @@ function Sync-ClientLaunchers {
     # --------------------------------------------------------------------------
     $cleanerBat = Join-Path $BAT_DIR "[500]-Don-Dep-Bo-Nho-Tam-He-Thong.bat"
     $cleanerPs1 = Join-Path $CORE_DIR "Engine-Cleaner.ps1"
-    $cleanerTmpl = Join-Path $ENGINE_DIR "Templates\Engine-Cleaner.ps1"
 
     if ($featuresDict["F01_CLEANER"] -eq 1 -or $featuresDict["FN0001"] -eq 1) {
-        # ĐƯỢC PHÉP DÙNG: Kiểm tra và khôi phục module nếu chưa có
+        # ĐƯỢC PHÉP DÙNG: Tải engine nếu chưa có và tạo launcher .bat
         if (-not (Test-Path -LiteralPath $cleanerPs1)) {
-            if (Test-Path -LiteralPath $cleanerTmpl) {
-                Copy-Item -LiteralPath $cleanerTmpl -Destination $cleanerPs1 -Force -ErrorAction SilentlyContinue
-            } else {
-                Write-Host " [*] Đang tải chức năng [F01_CLEANER] từ máy chủ..." -ForegroundColor Cyan
-                $dl = Download-ModuleFromCloud -RelativeUrl "Engine/Core/Engine-Cleaner.ps1" -DestinationPath $cleanerPs1
-                if ($dl) { Write-Host "     -> [OK] Đã tải thành công Engine-Cleaner.ps1" -ForegroundColor Green }
-            }
+            Write-Host " [*] Đang tải chức năng [F01_CLEANER] từ máy chủ..." -ForegroundColor Cyan
+            $dl = Download-ModuleFromCloud -RelativeUrl "Engine/Core/Engine-Cleaner.ps1" -DestinationPath $cleanerPs1
+            if ($dl) { Write-Host "     -> [OK] Đã tải thành công Engine-Cleaner.ps1" -ForegroundColor Green }
         }
         if (-not (Test-Path -LiteralPath $cleanerBat)) {
             $cleanerContent = "@echo off`r`n:: ==============================================================================`r`n:: Bản quyền thuộc về: Mr. ĐÀO XUÂN TUẤN (Tuấn Beo)`r`n:: Hotline: 0987.1987.92 | Email: tuanbeo.technology@gmail.com`r`n:: ==============================================================================`r`nsetlocal`r`ncd /d `"%~dp0`"`r`ntitle [500] Don Dep Bo Nho Tam He Thong - TB-Toolbox`r`nchcp 65001 >nul 2>&1`r`n`r`npowershell.exe -NoProfile -ExecutionPolicy Bypass -File `"`..\\Engine\\Core\\Engine-Cleaner.ps1`"`r`nexit /b`r`n"
@@ -122,18 +117,13 @@ function Sync-ClientLaunchers {
     # --------------------------------------------------------------------------
     $powerBat = Join-Path $BAT_DIR "[501]-Hen-Gio-Tat-May-Va-Quan-Ly-Nguon.bat"
     $powerPs1 = Join-Path $CORE_DIR "Engine-PowerManager.ps1"
-    $powerTmpl = Join-Path $ENGINE_DIR "Templates\Engine-PowerManager.ps1"
 
     if ($featuresDict["F02_SHUTDOWN_TIMER"] -eq 1 -or $featuresDict["FN0002"] -eq 1) {
-        # ĐƯỢC PHÉP DÙNG: Kiểm tra và khôi phục module nếu chưa có
+        # ĐƯỢC PHÉP DÙNG: Tải engine nếu chưa có và tạo launcher .bat
         if (-not (Test-Path -LiteralPath $powerPs1)) {
-            if (Test-Path -LiteralPath $powerTmpl) {
-                Copy-Item -LiteralPath $powerTmpl -Destination $powerPs1 -Force -ErrorAction SilentlyContinue
-            } else {
-                Write-Host " [*] Đang tải chức năng [F02_SHUTDOWN_TIMER] từ máy chủ..." -ForegroundColor Cyan
-                $dl = Download-ModuleFromCloud -RelativeUrl "Engine/Core/Engine-PowerManager.ps1" -DestinationPath $powerPs1
-                if ($dl) { Write-Host "     -> [OK] Đã tải thành công Engine-PowerManager.ps1" -ForegroundColor Green }
-            }
+            Write-Host " [*] Đang tải chức năng [F02_SHUTDOWN_TIMER] từ máy chủ..." -ForegroundColor Cyan
+            $dl = Download-ModuleFromCloud -RelativeUrl "Engine/Core/Engine-PowerManager.ps1" -DestinationPath $powerPs1
+            if ($dl) { Write-Host "     -> [OK] Đã tải thành công Engine-PowerManager.ps1" -ForegroundColor Green }
         }
         if (-not (Test-Path -LiteralPath $powerBat)) {
             $powerContent = "@echo off`r`n:: ==============================================================================`r`n:: Bản quyền thuộc về: Mr. ĐÀO XUÂN TUẤN (Tuấn Beo)`r`n:: Hotline: 0987.1987.92 | Email: tuanbeo.technology@gmail.com`r`n:: ==============================================================================`r`nsetlocal`r`ncd /d `"%~dp0`"`r`ntitle [501] Hen Gio Tat May Va Quan Ly Nguon - TB-Toolbox`r`nchcp 65001 >nul 2>&1`r`n`r`npowershell.exe -NoProfile -ExecutionPolicy Bypass -File `"`..\\Engine\\Core\\Engine-PowerManager.ps1`"`r`nexit /b`r`n"
