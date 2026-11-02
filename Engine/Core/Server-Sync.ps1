@@ -69,33 +69,36 @@ function Start-ServerSyncInteractive {
 
     # 1. Kết nối Cloud License Registry để kiểm tra trạng thái bản quyền mới nhất
     Write-Host "[*] Đang kết nối Máy chủ Đám mây để đối soát bản quyền..." -ForegroundColor Cyan
-    $serverUrl = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/licenses.json?t=$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"
     $cloudEntry = $null
+
+    # Ưu tiên 1 (Kênh thời gian thực, 0 giây delay): GitHub REST API trực tiếp
     try {
-        $wc = New-Object System.Net.WebClient
-        $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
-        $wc.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
-        $wc.Headers.Add("Pragma", "no-cache")
-        $rawJson = $wc.DownloadString($serverUrl)
-        $registry = $rawJson | ConvertFrom-Json
-        
-        if ($registry -is [System.Management.Automation.PSCustomObject]) {
-            if ($registry.PSObject.Properties[$currentHWID]) {
-                $cloudEntry = $registry.$currentHWID
-            } elseif ($registry.licenses -and $registry.licenses.PSObject.Properties[$currentHWID]) {
+        $apiResp = Invoke-RestMethod -Uri "https://api.github.com/repos/TuanBeo98RL/TB-Toolbox/contents/licenses.json" -Headers @{"User-Agent"="TB-Toolbox-Client"; "Cache-Control"="no-cache"} -TimeoutSec 6 -ErrorAction Stop
+        if ($apiResp -and $apiResp.content) {
+            $rawBytes = [Convert]::FromBase64String($apiResp.content)
+            $decoded = [System.Text.Encoding]::UTF8.GetString($rawBytes).Trim([char]0xFEFF)
+            $registry = $decoded | ConvertFrom-Json
+            if ($registry.licenses -and $registry.licenses.PSObject.Properties[$currentHWID]) {
                 $cloudEntry = $registry.licenses.$currentHWID
+            } elseif ($registry.PSObject.Properties[$currentHWID]) {
+                $cloudEntry = $registry.$currentHWID
             }
         }
     } catch {
-        # Fallback qua GitHub API nếu CDN bị nghẽn
+        # Ưu tiên 2 (Kênh dự phòng nếu API nghẽn / vượt hạn ngạch): CDN raw.githubusercontent.com
         try {
-            $apiResp = Invoke-RestMethod -Uri "https://api.github.com/repos/TuanBeo98RL/TB-Toolbox/contents/licenses.json" -Headers @{"User-Agent"="TB-Toolbox-Client"; "Cache-Control"="no-cache"} -TimeoutSec 5
-            if ($apiResp -and $apiResp.content) {
-                $decoded = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($apiResp.content))
-                $registry = $decoded | ConvertFrom-Json
-                if ($registry.licenses -and $registry.licenses.PSObject.Properties[$currentHWID]) {
-                    $cloudEntry = $registry.licenses.$currentHWID
-                }
+            $serverUrl = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/licenses.json?t=$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"
+            $wc = New-Object System.Net.WebClient
+            $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
+            $wc.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
+            $wc.Headers.Add("Pragma", "no-cache")
+            $rawJson = $wc.DownloadString($serverUrl).Trim([char]0xFEFF)
+            $registry = $rawJson | ConvertFrom-Json
+
+            if ($registry.licenses -and $registry.licenses.PSObject.Properties[$currentHWID]) {
+                $cloudEntry = $registry.licenses.$currentHWID
+            } elseif ($registry.PSObject.Properties[$currentHWID]) {
+                $cloudEntry = $registry.$currentHWID
             }
         } catch {
             Write-Host " [!] Tạm thời không thể tải danh sách bản quyền từ máy chủ: $($_.Exception.Message)" -ForegroundColor Yellow
@@ -187,9 +190,9 @@ function Start-ServerSyncInteractive {
         $wcSync.Headers.Add("User-Agent", "TB-Toolbox-Client")
         $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
         $baseSyncUrl = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core"
-        foreach ($cf in @("Dashboard-Launcher.ps1", "Client-Bootstrap.ps1")) {
+        foreach ($cf in @("Dashboard-Launcher.ps1", "Client-Bootstrap.ps1", "Server-Sync.ps1", "Crypto-RSA.ps1", "License-Engine.ps1")) {
             $txt = $wcSync.DownloadString("$baseSyncUrl/$cf?t=$ts")
-            if (-not [string]::IsNullOrWhiteSpace($txt) -and $txt.Contains("Bản quyền thuộc về")) {
+            if (-not [string]::IsNullOrWhiteSpace($txt) -and ($txt.Contains("Bản quyền") -or $txt.Contains("Ban quyen"))) {
                 [System.IO.File]::WriteAllText((Join-Path $CORE_DIR $cf), $txt, (New-Object System.Text.UTF8Encoding($true)))
             }
         }

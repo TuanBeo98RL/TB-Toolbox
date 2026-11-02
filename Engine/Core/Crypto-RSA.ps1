@@ -114,17 +114,28 @@ function Sign-DataRSA {
 # 3. XAC THUC CHU KY SO VOI PUBLIC KEY (CHAY TRÊN MÁY CLIENT)
 # ==============================================================================
 
+$script:BUILTIN_RSA_PUBLIC_XML = "<RSAKeyValue><Modulus>qcKfzdqUwbU3PJDoeR9tTn3Ju1xrOZZ2s7JDw2bNl7In9t1Jx8ryqoGdRNMY1Rl5HBkWnJ+CBmjrtg0jB5Mn2iHP668wvOaDUUa1CTKsODwjhIhDs2a6l/V4KGAj3tDwYakHsqgQyW3VKgW2ADImeyQhNqgMkGEXCg9qwF1ssCk5qgBFBFJeWEBgtxINXqYxpUWv0KnJUlypGlAwnLCUQ61n+/OPa/JupXM+djQMY5ZIMXVq3FzkRfZiB0kEH9KDN55OVWIkhfAuXvIo9NLRGfvTco8UFIXsQI8XetIPZxTu0D6+HmSaRti+Vl/9YHiOFuzJVQ+bkphNkG711UpVjQ==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>"
+
 function Verify-DataRSA {
     param (
         [string]$Data,
         [string]$SignatureBase64
     )
-    if (-not (Test-Path $PUBLIC_KEY_FILE)) {
+
+    $publicXml = ""
+    if (Test-Path $PUBLIC_KEY_FILE) {
+        try {
+            $publicXml = [System.IO.File]::ReadAllText($PUBLIC_KEY_FILE, [System.Text.Encoding]::UTF8).Trim()
+        } catch { }
+    }
+    if ([string]::IsNullOrWhiteSpace($publicXml)) {
+        $publicXml = $script:BUILTIN_RSA_PUBLIC_XML
+    }
+    if ([string]::IsNullOrWhiteSpace($publicXml)) {
         return $false
     }
 
     try {
-        $publicXml = [System.IO.File]::ReadAllText($PUBLIC_KEY_FILE, [System.Text.Encoding]::UTF8)
         $rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider
         $rsa.FromXmlString($publicXml)
 

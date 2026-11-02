@@ -91,31 +91,38 @@ function Check-CloudUpdateQuick {
         }
         $res.LocalKey = $localKey
 
-        $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-        $url = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/licenses.json?t=$ts"
-        
-        $req = [System.Net.WebRequest]::Create($url)
-        $req.Timeout = $TimeoutMs
-        $req.Headers.Add("User-Agent", "TB-Toolbox-Client")
-        $req.Headers.Add("Cache-Control", "no-cache")
-        $req.Headers.Add("Pragma", "no-cache")
-        
-        $resp = $req.GetResponse()
-        $stream = $resp.GetResponseStream()
-        $reader = New-Object System.IO.StreamReader($stream)
-        $jsonText = $reader.ReadToEnd()
-        $reader.Close()
-        $stream.Close()
-        $resp.Close()
-
-        $cloudRegistry = $jsonText | ConvertFrom-Json
         $cloudEntry = $null
-        if ($cloudRegistry -is [System.Management.Automation.PSCustomObject]) {
-            if ($cloudRegistry.PSObject.Properties[$CurrentHWID]) {
-                $cloudEntry = $cloudRegistry.$CurrentHWID
-            } elseif ($cloudRegistry.licenses -and $cloudRegistry.licenses.PSObject.Properties[$CurrentHWID]) {
-                $cloudEntry = $cloudRegistry.licenses.$CurrentHWID
+
+        # Kênh 1: GitHub REST API trực tiếp (0s cache delay)
+        try {
+            $apiResp = Invoke-RestMethod -Uri "https://api.github.com/repos/TuanBeo98RL/TB-Toolbox/contents/licenses.json" -Headers @{"User-Agent"="TB-Toolbox-Client"; "Cache-Control"="no-cache"} -TimeoutSec 3 -ErrorAction Stop
+            if ($apiResp -and $apiResp.content) {
+                $rawBytes = [Convert]::FromBase64String($apiResp.content)
+                $decoded = [System.Text.Encoding]::UTF8.GetString($rawBytes).Trim([char]0xFEFF)
+                $cloudRegistry = $decoded | ConvertFrom-Json
+                if ($cloudRegistry.licenses -and $cloudRegistry.licenses.PSObject.Properties[$CurrentHWID]) {
+                    $cloudEntry = $cloudRegistry.licenses.$CurrentHWID
+                } elseif ($cloudRegistry.PSObject.Properties[$CurrentHWID]) {
+                    $cloudEntry = $cloudRegistry.$CurrentHWID
+                }
             }
+        } catch {
+            # Kênh 2: CDN raw.githubusercontent.com dự phòng
+            try {
+                $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                $url = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/licenses.json?t=$ts"
+                
+                $wc = New-Object System.Net.WebClient
+                $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
+                $wc.Headers.Add("Cache-Control", "no-cache")
+                $rawText = $wc.DownloadString($url).Trim([char]0xFEFF)
+                $cloudRegistry = $rawText | ConvertFrom-Json
+                if ($cloudRegistry.licenses -and $cloudRegistry.licenses.PSObject.Properties[$CurrentHWID]) {
+                    $cloudEntry = $cloudRegistry.licenses.$CurrentHWID
+                } elseif ($cloudRegistry.PSObject.Properties[$CurrentHWID]) {
+                    $cloudEntry = $cloudRegistry.$CurrentHWID
+                }
+            } catch { }
         }
 
         if ($null -ne $cloudEntry) {
@@ -175,7 +182,7 @@ if (Get-Command Get-MachineHWID -ErrorAction SilentlyContinue) {
                 $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
                 $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
                 $rawBase = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core"
-                foreach ($cf in @("Server-Sync.ps1", "Client-Bootstrap.ps1", "License-Engine.ps1")) {
+                foreach ($cf in @("Server-Sync.ps1", "Client-Bootstrap.ps1", "License-Engine.ps1", "Crypto-RSA.ps1", "Dashboard-Launcher.ps1")) {
                     $code = $wc.DownloadString("$rawBase/$cf?t=$ts")
                     if (-not [string]::IsNullOrWhiteSpace($code) -and $code.Contains("Bản quyền thuộc về")) {
                         [System.IO.File]::WriteAllText((Join-Path $CoreDir $cf), $code, (New-Object System.Text.UTF8Encoding($true)))
@@ -336,7 +343,7 @@ while ($true) {
                     $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
                     $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
                     $rawBase = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core"
-                    foreach ($cf in @("Server-Sync.ps1", "Client-Bootstrap.ps1", "License-Engine.ps1")) {
+                    foreach ($cf in @("Server-Sync.ps1", "Client-Bootstrap.ps1", "License-Engine.ps1", "Crypto-RSA.ps1", "Dashboard-Launcher.ps1")) {
                         $code = $wc.DownloadString("$rawBase/$cf?t=$ts")
                         if (-not [string]::IsNullOrWhiteSpace($code) -and $code.Contains("Bản quyền thuộc về")) {
                             [System.IO.File]::WriteAllText((Join-Path $CoreDir $cf), $code, (New-Object System.Text.UTF8Encoding($true)))
