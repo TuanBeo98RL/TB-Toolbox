@@ -444,6 +444,6 @@ function Start-ClientBootstrap {
     }
 }
 
-if ([string]::IsNullOrWhiteSpace($MyInvocation.ScriptName)) {
+if ($MyInvocation.InvocationName -ne '.' -and (-not [string]::IsNullOrWhiteSpace($MyInvocation.MyCommand.Path))) {
     Start-ClientBootstrap
 }
