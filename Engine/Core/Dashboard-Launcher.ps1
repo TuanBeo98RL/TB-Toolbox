@@ -168,6 +168,18 @@ if (Get-Command Get-MachineHWID -ErrorAction SilentlyContinue) {
         Write-Host " 👉 Bạn có muốn đồng bộ ngay bây giờ không? (Y/N, Nhấn ENTER để Đồng bộ ngay): " -ForegroundColor Cyan -NoNewline
         $quickSync = (Read-Host).Trim()
         if ($quickSync -eq "" -or $quickSync -eq "Y" -or $quickSync -eq "y") {
+            try {
+                $wc = New-Object System.Net.WebClient
+                $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
+                $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                $rawBase = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core"
+                foreach ($cf in @("Server-Sync.ps1", "Client-Bootstrap.ps1", "License-Engine.ps1")) {
+                    $code = $wc.DownloadString("$rawBase/$cf?t=$ts")
+                    if (-not [string]::IsNullOrWhiteSpace($code) -and $code.Contains("Bản quyền thuộc về")) {
+                        [System.IO.File]::WriteAllText((Join-Path $CoreDir $cf), $code, (New-Object System.Text.UTF8Encoding($true)))
+                    }
+                }
+            } catch {}
             Write-Host "`n[*] Đang khởi chạy quy trình đồng bộ cập nhật..." -ForegroundColor Green
             Start-Sleep -Milliseconds 400
             & "$CoreDir\Server-Sync.ps1" -RunInteractive -AutoConfirm
@@ -314,6 +326,22 @@ while ($true) {
             Write-Host "`nĐang khởi chạy: " -NoNewline -ForegroundColor Cyan
             Write-Host "$($target.Icon) $($target.Title) ..." -ForegroundColor Yellow
             Start-Sleep -Milliseconds 500
+
+            # Nếu là tác vụ cập nhật [200]/[1003], tự động kéo mã nguồn đồng bộ mới nhất từ Server trước
+            if ($target.Code -eq "200" -or $choice -eq "1003") {
+                try {
+                    $wc = New-Object System.Net.WebClient
+                    $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
+                    $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                    $rawBase = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core"
+                    foreach ($cf in @("Server-Sync.ps1", "Client-Bootstrap.ps1", "License-Engine.ps1")) {
+                        $code = $wc.DownloadString("$rawBase/$cf?t=$ts")
+                        if (-not [string]::IsNullOrWhiteSpace($code) -and $code.Contains("Bản quyền thuộc về")) {
+                            [System.IO.File]::WriteAllText((Join-Path $CoreDir $cf), $code, (New-Object System.Text.UTF8Encoding($true)))
+                        }
+                    }
+                } catch {}
+            }
 
             # Kích hoạt tệp .bat
             Push-Location (Split-Path -Parent $target.FullPath)
