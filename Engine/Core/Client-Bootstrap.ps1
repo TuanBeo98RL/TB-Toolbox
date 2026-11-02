@@ -37,15 +37,36 @@ function Download-ModuleFromCloud {
         [string]$RelativeUrl,
         [string]$DestinationPath
     )
-    $baseUrl = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main"
-    $fullUrl = "$baseUrl/$RelativeUrl?t=$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"
-    
+
+    $dir = Split-Path -Parent $DestinationPath
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+
+    # Kênh 1 (Thời gian thực, 0s trễ, không bị chặn DNS): GitHub REST API trực tiếp
     try {
+        $cleanRel = $RelativeUrl.TrimStart("/").Replace("\", "/")
+        $apiUrl = "https://api.github.com/repos/TuanBeo98RL/TB-Toolbox/contents/$cleanRel"
+        $apiResp = Invoke-RestMethod -Uri $apiUrl -Headers @{"User-Agent"="TB-Toolbox-Client"; "Cache-Control"="no-cache"} -TimeoutSec 8 -ErrorAction Stop
+        if ($apiResp -and $apiResp.content) {
+            $bytes = [Convert]::FromBase64String($apiResp.content)
+            if ($bytes.Length -gt 0) {
+                $utf8Bom = [byte[]]@(0xEF, 0xBB, 0xBF)
+                # Đảm bảo tệp .ps1 được lưu chuẩn UTF-8 BOM
+                if ($DestinationPath.EndsWith(".ps1") -and ($bytes.Length -lt 3 -or $bytes[0] -ne 0xEF -or $bytes[1] -ne 0xBB -or $bytes[2] -ne 0xBF)) {
+                    [System.IO.File]::WriteAllBytes($DestinationPath, ($utf8Bom + $bytes))
+                } else {
+                    [System.IO.File]::WriteAllBytes($DestinationPath, $bytes)
+                }
+                return $true
+            }
+        }
+    } catch { }
+
+    # Kênh 2: CDN raw.githubusercontent.com dự phòng
+    try {
+        $baseUrl = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main"
+        $fullUrl = "$baseUrl/$RelativeUrl?t=$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"
         $wc = New-Object System.Net.WebClient
         $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
-        $dir = Split-Path -Parent $DestinationPath
-        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-        
         $tempPath = "$DestinationPath.tmp"
         $wc.DownloadFile($fullUrl, $tempPath)
         
@@ -92,8 +113,8 @@ function Sync-ClientLaunchers {
             $dl = Download-ModuleFromCloud -RelativeUrl "Engine/Core/Engine-Cleaner.ps1" -DestinationPath $cleanerPs1
             if ($dl) { Write-Host "     -> [OK] Đã tải thành công Engine-Cleaner.ps1" -ForegroundColor Green }
         }
-        if (-not (Test-Path -LiteralPath $cleanerBat)) {
-            $cleanerContent = "@echo off`r`n:: ==============================================================================`r`n:: Bản quyền thuộc về: Mr. ĐÀO XUÂN TUẤN (Tuấn Beo)`r`n:: Hotline: 0987.1987.92 | Email: tuanbeo.technology@gmail.com`r`n:: ==============================================================================`r`nsetlocal`r`ncd /d `"%~dp0`"`r`ntitle [500] Don Dep Bo Nho Tam He Thong - TB-Toolbox`r`nchcp 65001 >nul 2>&1`r`n`r`npowershell.exe -NoProfile -ExecutionPolicy Bypass -File `"`..\\Engine\\Core\\Engine-Cleaner.ps1`"`r`nexit /b`r`n"
+        if (Test-Path -LiteralPath $cleanerPs1) {
+            $cleanerContent = "@echo off`r`n:: ==============================================================================`r`n:: Bản quyền thuộc về: Mr. ĐÀO XUÂN TUẤN (Tuấn Beo)`r`n:: Hotline: 0987.1987.92 | Email: tuanbeo.technology@gmail.com`r`n:: ==============================================================================`r`nsetlocal`r`ncd /d `"%~dp0`"`r`ntitle [500] Don Dep Bo Nho Tam He Thong - TB-Toolbox`r`nchcp 65001 >nul 2>&1`r`n`r`npowershell.exe -NoProfile -ExecutionPolicy Bypass -File `"`..\Engine\Core\Engine-Cleaner.ps1`"`r`nexit /b`r`n"
             [System.IO.File]::WriteAllText($cleanerBat, $cleanerContent, $utf8WithBom)
         }
     } else {
@@ -125,8 +146,8 @@ function Sync-ClientLaunchers {
             $dl = Download-ModuleFromCloud -RelativeUrl "Engine/Core/Engine-PowerManager.ps1" -DestinationPath $powerPs1
             if ($dl) { Write-Host "     -> [OK] Đã tải thành công Engine-PowerManager.ps1" -ForegroundColor Green }
         }
-        if (-not (Test-Path -LiteralPath $powerBat)) {
-            $powerContent = "@echo off`r`n:: ==============================================================================`r`n:: Bản quyền thuộc về: Mr. ĐÀO XUÂN TUẤN (Tuấn Beo)`r`n:: Hotline: 0987.1987.92 | Email: tuanbeo.technology@gmail.com`r`n:: ==============================================================================`r`nsetlocal`r`ncd /d `"%~dp0`"`r`ntitle [501] Hen Gio Tat May Va Quan Ly Nguon - TB-Toolbox`r`nchcp 65001 >nul 2>&1`r`n`r`npowershell.exe -NoProfile -ExecutionPolicy Bypass -File `"`..\\Engine\\Core\\Engine-PowerManager.ps1`"`r`nexit /b`r`n"
+        if (Test-Path -LiteralPath $powerPs1) {
+            $powerContent = "@echo off`r`n:: ==============================================================================`r`n:: Bản quyền thuộc về: Mr. ĐÀO XUÂN TUẤN (Tuấn Beo)`r`n:: Hotline: 0987.1987.92 | Email: tuanbeo.technology@gmail.com`r`n:: ==============================================================================`r`nsetlocal`r`ncd /d `"%~dp0`"`r`ntitle [501] Hen Gio Tat May Va Quan Ly Nguon - TB-Toolbox`r`nchcp 65001 >nul 2>&1`r`n`r`npowershell.exe -NoProfile -ExecutionPolicy Bypass -File `"`..\Engine\Core\Engine-PowerManager.ps1`"`r`nexit /b`r`n"
             [System.IO.File]::WriteAllText($powerBat, $powerContent, $utf8WithBom)
         }
     } else {

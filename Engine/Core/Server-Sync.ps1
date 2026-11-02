@@ -186,14 +186,14 @@ function Start-ServerSyncInteractive {
 
     # 5.1. Tự động đồng bộ các tệp giao diện & kịch bản lõi mới nhất từ Server
     try {
-        $wcSync = New-Object System.Net.WebClient
-        $wcSync.Headers.Add("User-Agent", "TB-Toolbox-Client")
-        $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-        $baseSyncUrl = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core"
-        foreach ($cf in @("Dashboard-Launcher.ps1", "Client-Bootstrap.ps1", "Server-Sync.ps1", "Crypto-RSA.ps1", "License-Engine.ps1")) {
-            $txt = $wcSync.DownloadString("$baseSyncUrl/$cf?t=$ts")
-            if (-not [string]::IsNullOrWhiteSpace($txt) -and ($txt.Contains("Bản quyền") -or $txt.Contains("Ban quyen"))) {
-                [System.IO.File]::WriteAllText((Join-Path $CORE_DIR $cf), $txt, (New-Object System.Text.UTF8Encoding($true)))
+        $coreFilesToSync = @("Dashboard-Launcher.ps1", "Client-Bootstrap.ps1", "Server-Sync.ps1", "Crypto-RSA.ps1", "License-Engine.ps1")
+        if ($cleanerAllowed) { $coreFilesToSync += "Engine-Cleaner.ps1" }
+        if ($powerAllowed)   { $coreFilesToSync += "Engine-PowerManager.ps1" }
+
+        foreach ($cf in $coreFilesToSync) {
+            $destPath = Join-Path $CORE_DIR $cf
+            if (-not (Test-Path $destPath) -or $cf -in @("Dashboard-Launcher.ps1", "Client-Bootstrap.ps1", "Server-Sync.ps1")) {
+                Download-ModuleFromCloud -RelativeUrl "Engine/Core/$cf" -DestinationPath $destPath | Out-Null
             }
         }
     } catch { }

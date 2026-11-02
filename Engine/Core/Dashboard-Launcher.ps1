@@ -339,17 +339,31 @@ while ($true) {
             # Nếu là tác vụ cập nhật [200]/[1003], tự động kéo mã nguồn đồng bộ mới nhất từ Server trước
             if ($target.Code -eq "200" -or $choice -eq "1003") {
                 try {
-                    $wc = New-Object System.Net.WebClient
-                    $wc.Headers.Add("User-Agent", "TB-Toolbox-Client")
-                    $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-                    $rawBase = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core"
                     foreach ($cf in @("Server-Sync.ps1", "Client-Bootstrap.ps1", "License-Engine.ps1", "Crypto-RSA.ps1", "Dashboard-Launcher.ps1")) {
-                        $code = $wc.DownloadString("$rawBase/$cf?t=$ts")
-                        if (-not [string]::IsNullOrWhiteSpace($code) -and $code.Contains("Bản quyền thuộc về")) {
-                            [System.IO.File]::WriteAllText((Join-Path $CoreDir $cf), $code, (New-Object System.Text.UTF8Encoding($true)))
+                        if (Get-Command Download-ModuleFromCloud -ErrorAction SilentlyContinue) {
+                            Download-ModuleFromCloud -RelativeUrl "Engine/Core/$cf" -DestinationPath (Join-Path $CoreDir $cf) | Out-Null
                         }
                     }
                 } catch {}
+            }
+
+            # Cơ chế Tự Chữa Lành (Self-Healing Guard): Kiểm tra và tự kéo script Core nếu bị thiếu
+            if ($target.Code -eq "500") {
+                $cleanerPs1 = Join-Path $CoreDir "Engine-Cleaner.ps1"
+                if (-not (Test-Path -LiteralPath $cleanerPs1)) {
+                    Write-Host " [*] Phát hiện thiếu tệp Engine-Cleaner.ps1! Đang tự động tải về từ máy chủ..." -ForegroundColor Cyan
+                    if (Get-Command Download-ModuleFromCloud -ErrorAction SilentlyContinue) {
+                        Download-ModuleFromCloud -RelativeUrl "Engine/Core/Engine-Cleaner.ps1" -DestinationPath $cleanerPs1 | Out-Null
+                    }
+                }
+            } elseif ($target.Code -eq "501") {
+                $powerPs1 = Join-Path $CoreDir "Engine-PowerManager.ps1"
+                if (-not (Test-Path -LiteralPath $powerPs1)) {
+                    Write-Host " [*] Phát hiện thiếu tệp Engine-PowerManager.ps1! Đang tự động tải về từ máy chủ..." -ForegroundColor Cyan
+                    if (Get-Command Download-ModuleFromCloud -ErrorAction SilentlyContinue) {
+                        Download-ModuleFromCloud -RelativeUrl "Engine/Core/Engine-PowerManager.ps1" -DestinationPath $powerPs1 | Out-Null
+                    }
+                }
             }
 
             # Kích hoạt tệp .bat
