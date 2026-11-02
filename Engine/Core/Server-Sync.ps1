@@ -159,38 +159,25 @@ function Start-ServerSyncInteractive {
         Get-ChildItem -LiteralPath $ACTIONS_DIR -Filter "*500*.bat" -ErrorAction SilentlyContinue | ForEach-Object {
             Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
         }
-        $cPs1 = Join-Path $CORE_DIR "Engine-Cleaner.ps1"
-        if (Test-Path -LiteralPath $cPs1) {
-            $tmplDir = Join-Path $ENGINE_DIR "Templates"
-            if (-not (Test-Path $tmplDir)) { New-Item -ItemType Directory -Path $tmplDir -Force | Out-Null }
-            Copy-Item -LiteralPath $cPs1 -Destination (Join-Path $tmplDir "Engine-Cleaner.ps1") -Force -ErrorAction SilentlyContinue
-            Remove-Item -LiteralPath $cPs1 -Force -ErrorAction SilentlyContinue
-        }
     }
     $powerAllowed = ($feats.F02_SHUTDOWN_TIMER -eq 1 -or $feats.FN0002 -eq 1)
     if (-not $powerAllowed) {
         Get-ChildItem -LiteralPath $ACTIONS_DIR -Filter "*501*.bat" -ErrorAction SilentlyContinue | ForEach-Object {
             Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
         }
-        $pPs1 = Join-Path $CORE_DIR "Engine-PowerManager.ps1"
-        if (Test-Path -LiteralPath $pPs1) {
-            $tmplDir = Join-Path $ENGINE_DIR "Templates"
-            if (-not (Test-Path $tmplDir)) { New-Item -ItemType Directory -Path $tmplDir -Force | Out-Null }
-            Copy-Item -LiteralPath $pPs1 -Destination (Join-Path $tmplDir "Engine-PowerManager.ps1") -Force -ErrorAction SilentlyContinue
-            Remove-Item -LiteralPath $pPs1 -Force -ErrorAction SilentlyContinue
-        }
     }
 
-    # 5.1. Tự động đồng bộ tệp giao diện Dashboard-Launcher.ps1 mới nhất từ Server
+    # 5.1. Tự động đồng bộ các tệp giao diện & kịch bản lõi mới nhất từ Server
     try {
-        $dashUrl = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core/Dashboard-Launcher.ps1?t=$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"
-        $wcDash = New-Object System.Net.WebClient
-        $wcDash.Headers.Add("User-Agent", "TB-Toolbox-Client")
-        $newDashText = $wcDash.DownloadString($dashUrl)
-        if (-not [string]::IsNullOrWhiteSpace($newDashText) -and $newDashText.Contains("CẤU HÌNH HỆ THỐNG & BẢN QUYỀN")) {
-            $localDashPath = Join-Path $CORE_DIR "Dashboard-Launcher.ps1"
-            [System.IO.File]::WriteAllText($localDashPath, $newDashText, (New-Object System.Text.UTF8Encoding($true)))
-            Write-Host " [✓] Đã cập nhật giao diện Bảng điều khiển mới nhất từ Server." -ForegroundColor DarkGray
+        $wcSync = New-Object System.Net.WebClient
+        $wcSync.Headers.Add("User-Agent", "TB-Toolbox-Client")
+        $ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        $baseSyncUrl = "https://raw.githubusercontent.com/TuanBeo98RL/TB-Toolbox/main/Engine/Core"
+        foreach ($cf in @("Dashboard-Launcher.ps1", "Client-Bootstrap.ps1")) {
+            $txt = $wcSync.DownloadString("$baseSyncUrl/$cf?t=$ts")
+            if (-not [string]::IsNullOrWhiteSpace($txt) -and $txt.Contains("Bản quyền thuộc về")) {
+                [System.IO.File]::WriteAllText((Join-Path $CORE_DIR $cf), $txt, (New-Object System.Text.UTF8Encoding($true)))
+            }
         }
     } catch { }
 

@@ -102,7 +102,7 @@ function Sync-ClientLaunchers {
             [System.IO.File]::WriteAllText($cleanerBat, $cleanerContent, $utf8WithBom)
         }
     } else {
-        # KHÔNG ĐƯỢC PHÉP DÙNG / BỊ THU HỒI: XÓA SẠCH BẰNG -LiteralPath
+        # KHÔNG ĐƯỢC PHÉP DÙNG / BỊ THU HỒI: DỠ BỎ KHỎI MENU BẰNG CÁCH XÓA PHÍM TẮT .BAT
         $hadFile = $false
         if (Test-Path -LiteralPath $cleanerBat) {
             Remove-Item -LiteralPath $cleanerBat -Force -ErrorAction SilentlyContinue
@@ -110,13 +110,6 @@ function Sync-ClientLaunchers {
         }
         Get-ChildItem -LiteralPath $BAT_DIR -Filter "*500*.bat" -ErrorAction SilentlyContinue | ForEach-Object {
             Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
-            $hadFile = $true
-        }
-        if (Test-Path -LiteralPath $cleanerPs1) {
-            $tmplDir = Join-Path $ENGINE_DIR "Templates"
-            if (-not (Test-Path $tmplDir)) { New-Item -ItemType Directory -Path $tmplDir -Force | Out-Null }
-            Copy-Item -LiteralPath $cleanerPs1 -Destination $cleanerTmpl -Force -ErrorAction SilentlyContinue
-            Remove-Item -LiteralPath $cleanerPs1 -Force -ErrorAction SilentlyContinue
             $hadFile = $true
         }
         if ($hadFile) {
@@ -147,7 +140,7 @@ function Sync-ClientLaunchers {
             [System.IO.File]::WriteAllText($powerBat, $powerContent, $utf8WithBom)
         }
     } else {
-        # KHÔNG ĐƯỢC PHÉP DÙNG / BỊ THU HỒI: XÓA SẠCH BẰNG -LiteralPath
+        # KHÔNG ĐƯỢC PHÉP DÙNG / BỊ THU HỒI: DỠ BỎ KHỎI MENU BẰNG CÁCH XÓA PHÍM TẮT .BAT
         $hadFile = $false
         if (Test-Path -LiteralPath $powerBat) {
             Remove-Item -LiteralPath $powerBat -Force -ErrorAction SilentlyContinue
@@ -155,13 +148,6 @@ function Sync-ClientLaunchers {
         }
         Get-ChildItem -LiteralPath $BAT_DIR -Filter "*501*.bat" -ErrorAction SilentlyContinue | ForEach-Object {
             Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
-            $hadFile = $true
-        }
-        if (Test-Path -LiteralPath $powerPs1) {
-            $tmplDir = Join-Path $ENGINE_DIR "Templates"
-            if (-not (Test-Path $tmplDir)) { New-Item -ItemType Directory -Path $tmplDir -Force | Out-Null }
-            Copy-Item -LiteralPath $powerPs1 -Destination $powerTmpl -Force -ErrorAction SilentlyContinue
-            Remove-Item -LiteralPath $powerPs1 -Force -ErrorAction SilentlyContinue
             $hadFile = $true
         }
         if ($hadFile) {
